@@ -20,13 +20,15 @@ def send_report(report_markdown=None, recipient=None):
                 report_markdown = f.read()
         except FileNotFoundError:
             logger.error("Report file not found.")
-            return
+            import sys
+            sys.exit(1)
 
     logger.info("Preparing to send email...")
     
     if not report_markdown:
         logger.error("No report content to send.")
-        return
+        import sys
+        sys.exit(1)
 
     # Convert Markdown to HTML
     html_body = markdown.markdown(report_markdown)
@@ -60,6 +62,8 @@ def send_report(report_markdown=None, recipient=None):
         logger.info(f"Email successfully sent to {recipient}")
     except Exception as e:
         logger.error(f"Failed to send email: {e}")
+        import sys
+        sys.exit(1)
 
 if __name__ == "__main__":
     send_report()
