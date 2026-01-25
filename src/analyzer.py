@@ -108,6 +108,7 @@ def summarize_news(data_file="data/news_cache.json"):
     # Save report to file
     report_path = "data/report.md"
     try:
+        os.makedirs(os.path.dirname(report_path), exist_ok=True)
         with open(report_path, "w", encoding="utf-8") as f:
             f.write(report)
         logger.info(f"Report saved to {report_path}")
