@@ -91,6 +91,13 @@ def fetch_cricket_news(time_window=None):
     
     # Save to cache
     save_data(results)
+    
+    # Verify save
+    if not os.path.exists("data/news_cache.json"):
+        logger.error("Failed to save data/news_cache.json")
+        import sys
+        sys.exit(1)
+        
     return results
 
 if __name__ == "__main__":
