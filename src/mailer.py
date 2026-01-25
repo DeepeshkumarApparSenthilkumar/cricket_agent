@@ -40,9 +40,25 @@ def send_report(report_markdown=None, recipient=None):
     if not recipient:
         recipient = os.getenv("EMAIL_RECIPIENT", "dk5058203@gmail.com")
 
+    # Debug logging for secrets (masked)
+    if sender_email:
+        logger.info(f"EMAIL_SENDER found: {sender_email[:3]}***@***")
+    else:
+        logger.error("EMAIL_SENDER environment variable is MISSING")
+
+    if password:
+        logger.info("EMAIL_PASSWORD found: [MASKED]")
+    else:
+        logger.error("EMAIL_PASSWORD environment variable is MISSING")
+
     if not sender_email or not password:
         logger.warning("EMAIL_SENDER or EMAIL_PASSWORD not set. Skipping actual email delivery (Simulation Mode).")
         logger.info(f"Generated HTML Content (preview):\n{html_body[:200]}...")
+        # In GitHub Actions, we want to fail if secrets are missing to alert the user
+        if os.getenv("GITHUB_ACTIONS"):
+             logger.error("Running in GitHub Actions but secrets are missing! Failing build.")
+             import sys
+             sys.exit(1)
         return
 
     try:
