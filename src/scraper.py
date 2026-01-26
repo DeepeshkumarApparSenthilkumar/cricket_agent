@@ -27,6 +27,13 @@ def fetch_from_bbc():
             articles = soup.find_all('div', {'type': 'article'})
             for art in articles[:5]:
                 text = art.get_text(strip=True)
+                
+                # Clean up the text
+                # Remove common BBC metadata suffixes
+                for marker in ["Attribution", "Posted", "Comments"]:
+                    if marker in text:
+                        text = text.split(marker)[0].strip()
+                
                 link = art.find('a')['href'] if art.find('a') else ''
                 if link and not link.startswith('http'):
                     link = f"https://www.bbc.com{link}"
