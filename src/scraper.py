@@ -6,6 +6,7 @@ from src.utils import setup_logging, save_data
 logger = setup_logging()
 
 import requests
+import os
 from bs4 import BeautifulSoup
 
 def fetch_from_bbc():
