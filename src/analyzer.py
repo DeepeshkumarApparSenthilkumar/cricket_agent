@@ -16,18 +16,29 @@ def generate_fallback_report(headlines, matches, injuries):
     
     if matches:
         report.append("# 🏏 HEADLINE MATCH SUMMARY")
-        for m in matches[:2]: # Top 2
+        for m in matches[:3]: # Top 3
             title = m.get('title', 'Match')
-            body = m.get('body', '')
-            report.append(f"**{title}**\n{body}\n")
+            summary = m.get('summary', '')
+            link = m.get('href', '')
+            report.append(f"### {title}")
+            if summary:
+                report.append(f"{summary}")
+            if link:
+                report.append(f"[Read full story]({link})")
+            report.append("")
     
     if headlines:
         report.append("# 📰 GLOBAL CRICKET BULLETIN")
         for h in headlines[:5]:
             title = h.get('title', '')
+            summary = h.get('summary', '')
             link = h.get('href', '')
-            report.append(f"* {title} ([Read more]({link}))")
-        report.append("")
+            report.append(f"**{title}**")
+            if summary:
+                report.append(f"> {summary}")
+            if link:
+                report.append(f"[Read more]({link})")
+            report.append("")
 
     if matches:
         report.append("# 📊 TODAY'S SCOREBOARD RECAP")
@@ -42,7 +53,8 @@ def generate_fallback_report(headlines, matches, injuries):
         report.append("# 📝 INJURY & ADMIN NOTES")
         for i in injuries:
             title = i.get('title', '')
-            report.append(f"* {title}")
+            summary = i.get('summary', '')
+            report.append(f"* **{title}**: {summary}")
     
     return "\n".join(report)
 

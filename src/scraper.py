@@ -9,42 +9,56 @@ import requests
 import os
 from bs4 import BeautifulSoup
 
-def fetch_from_bbc():
-    logger.info("Attempting fallback scrape from BBC Cricket...")
-    url = "https://www.bbc.com/sport/cricket"
+def fetch_rss_news():
+    logger.info("Fetching news from RSS feeds...")
+    feeds = [
+        "https://feeds.bbci.co.uk/sport/cricket/rss.xml",
+        "https://www.espncricinfo.com/rss/content/story/feeds/0.xml"
+    ]
+    
     results = {
         "headlines": [],
         "match_results": [],
         "injuries": []
     }
-    try:
-        response = requests.get(url, headers={'User-Agent': 'Mozilla/5.0'})
-        if response.status_code == 200:
-            soup = BeautifulSoup(response.text, 'html.parser')
-            
-            # Extract headlines (BBC structure changes, this is a generic attempt)
-            # Looking for main promo or top stories
-            articles = soup.find_all('div', {'type': 'article'})
-            for art in articles[:5]:
-                text = art.get_text(strip=True)
-                
-                # Clean up the text
-                # Remove common BBC metadata suffixes
-                for marker in ["Attribution", "Posted", "Comments"]:
-                    if marker in text:
-                        text = text.split(marker)[0].strip()
-                
-                link = art.find('a')['href'] if art.find('a') else ''
-                if link and not link.startswith('http'):
-                    link = f"https://www.bbc.com{link}"
-                results['headlines'].append({'title': text, 'href': link})
-            
-            logger.info(f"BBC Scrape: Found {len(results['headlines'])} headlines.")
-        else:
-            logger.error(f"BBC Scrape failed with status: {response.status_code}")
-    except Exception as e:
-        logger.error(f"BBC Scrape error: {e}")
     
+    for url in feeds:
+        try:
+            response = requests.get(url, headers={'User-Agent': 'Mozilla/5.0'}, timeout=10)
+            if response.status_code == 200:
+                # Use xml parser
+                soup = BeautifulSoup(response.content, 'xml')
+                items = soup.find_all('item')
+                
+                for item in items[:5]: # Top 5 from each
+                    title = item.title.text.strip()
+                    description = item.description.text.strip() if item.description else ""
+                    link = item.link.text.strip() if item.link else ""
+                    
+                    # Clean up description (sometimes contains HTML)
+                    if '<' in description:
+                        description = BeautifulSoup(description, 'html.parser').get_text()
+                    
+                    news_item = {
+                        'title': title,
+                        'summary': description,
+                        'href': link,
+                        'source': 'BBC' if 'bbc' in url else 'Cricinfo'
+                    }
+                    
+                    # Simple categorization
+                    lower_title = title.lower()
+                    if 'win' in lower_title or 'beat' in lower_title or 'score' in lower_title:
+                        results['match_results'].append(news_item)
+                    elif 'injury' in lower_title or 'ruled out' in lower_title or 'squad' in lower_title:
+                        results['injuries'].append(news_item)
+                    else:
+                        results['headlines'].append(news_item)
+                        
+            logger.info(f"Fetched from {url}")
+        except Exception as e:
+            logger.error(f"Error fetching RSS {url}: {e}")
+            
     return results
 
 def fetch_cricket_news(time_window=None):
@@ -91,8 +105,10 @@ def fetch_cricket_news(time_window=None):
     # Fallback if empty
     if not results['headlines'] and not results['match_results']:
         logger.info("DDGS returned empty. Switching to fallback...")
-        fallback_data = fetch_from_bbc()
+        fallback_data = fetch_rss_news()
         results['headlines'].extend(fallback_data['headlines'])
+        results['match_results'].extend(fallback_data['match_results'])
+        results['injuries'].extend(fallback_data['injuries'])
         # BBC scrape is limited, but better than nothing
 
     logger.info(f"Scraping complete. Found {len(results['headlines'])} headlines, {len(results['match_results'])} matches, {len(results['injuries'])} injury updates.")
