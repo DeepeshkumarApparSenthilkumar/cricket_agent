@@ -27,8 +27,8 @@ jobs:
       env:
         GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         EMAIL_SENDER: ${{ secrets.EMAIL_SENDER }}
-        EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
-        EMAIL_RECIPIENT: ${{ secrets.EMAIL_RECIPIENT }}
+        EMAIL_PASSWORD: ${{ secrets.SENDER_PASSWORD }}
+        EMAIL_RECIPIENT: ${{ secrets.EMAIL_RECIEVER }}
       run: |
         python -m src.scraper
         python -m src.analyzer
